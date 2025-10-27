@@ -263,7 +263,7 @@ def prepare_image_for_arnold(img_bgr):
 # ---------------------------
 # 图像加密主流程
 # ---------------------------
-def encrypt_image(input_path, password, model_path=None, save_model_path='gru_chaos_checkpoint.pth',
+def encrypt_image(input_path, password, model_path=None, save_model_path='model2_(200epoch).pth',
                   train_if_no_model=False, rk_steps=20000, rk_dt=0.01, seq_len=50):
     """
     Args:
@@ -323,13 +323,13 @@ def encrypt_image(input_path, password, model_path=None, save_model_path='gru_ch
     # 尝试训练新的模型
     elif train_if_no_model:
         model.train()
-        epochs = 50 # 训练50epoch
+        epochs = 200 # 训练200epoch
         for epoch in range(epochs):
-            for xb, yb in tqdm(loader,desc=f"训练Epoch{epochs+1}/{epochs}"):
+            for xb, yb in tqdm(loader,desc=f"训练Epoch{epoch+1}/{epochs}"):
                 xb = xb.to(device)
                 yb = yb.to(device)
                 optimizer.zero_grad()         # 清零梯度
-                out = model(xb)               # 模型预测
+                out, _ = model(xb)            # 模型预测
                 loss = nn.MSELoss()(out, yb)  # 计算均方误差MSE
                 loss.backward()               # 反向传播
                 optimizer.step()              # 优化器更新权重
@@ -459,12 +459,12 @@ if __name__ == "__main__":
     set_seed(1234)
     input_path = r"D:\cxy\deeplearning\2025-2026_1\P1.jpg"
     password = "ddj"
-    model_file = "gru_chaos_checkpoint.pth"
+    model_file = "model1_(50epoch).pth"
     save_dir = r"D:\cxy\deeplearning\2025-2026_1\picture"
     os.makedirs(save_dir, exist_ok=True) # 如果输出目录不存在则生成
 
     # 加密
-    encrypted_rgb, meta, model = encrypt_image(input_path, password, model_path=model_file, train_if_no_model=False)
+    encrypted_rgb, meta, model = encrypt_image(input_path, password, model_path=None, train_if_no_model=True)
     print("加密完成，metadata:", meta)
     enc_bgr = cv2.cvtColor(encrypted_rgb, cv2.COLOR_RGB2BGR)
     enc_path = os.path.join(save_dir, "encrypted.jpg")
